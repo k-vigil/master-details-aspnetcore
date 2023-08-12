@@ -1,0 +1,196 @@
+﻿@page
+@model MasterDetailExample.Pages.IndexModel
+@{
+    ViewData["Title"] = "Home";
+}
+
+<h5 class="mb-3">Add order</h5>
+
+<form method="post">
+    <div class="row">
+        <div class="col-sm-12 col-md-12 col-lg-4">
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h6>General</h6>
+                </div>
+                <div class="card-body">
+
+                    <div class="mb-3">
+                        <label class="form-label">Customer</label>
+                        <input type="text" class="form-control" asp-for="OrderViewModel.Customer" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Document type</label>
+                        <select class="form-select" asp-for="OrderViewModel.DocumentType">
+                            <option value="">Choose an options</option>
+                            <option value="CF">CF</option>
+                            <option value="CCF">CCF</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Document no.</label>
+                        <input type="text" class="form-control" asp-for="OrderViewModel.DocumentNumber" />
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100" id="btnSave">Save</button>
+
+                </div>
+            </div>
+        </div>
+        <div class="col-sm-12 col-md-12 col-lg-8">
+            <div class="row align-items-end mb-3">
+                <div class="col-sm-12 col-md-12 col-lg-6">
+                    <label class="form-label">Description</label>
+                    <input type="text" class="form-control" id="description" />
+                </div>
+                <div class="col-sm-12 col-md-12 col-lg-2">
+                    <label class="form-label">Quantity</label>
+                    <input type="number" class="form-control" id="quantity" value="0" />
+                </div>
+                <div class="col-sm-12 col-md-12 col-lg-2">
+                    <label class="form-label">Unit price</label>
+                    <input type="number" class="form-control" id="unit-price" value="0" />
+                </div>
+                <div class="col-sm-12 col-md-12 col-lg-2">
+                    <button type="button" class="btn btn-secondary w-100" id="btnAddItem">Add item</button>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-header bg-white">
+                    <h6>Items</h6>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+
+                        <table class="table table-borderless table-hover">
+                            <thead>
+                                <tr>
+                                    <th class="bg-light" style="width: 80px;">#</th>
+                                    <th class="bg-light">Description</th>
+                                    <th class="bg-light text-end" style="width: 80px;">Qty.</th>
+                                    <th class="bg-light text-end" style="width: 80px;">U/p</th>
+                                    <th class="bg-light text-end" style="width: 80px;">Subt</th>
+                                    <th class="bg-light text-center" style="width: 80px;">Remove</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-items"></tbody>
+                        </table>
+
+                        <div id="inputs-here"></div>
+
+                    </div>
+                </div>
+                <div class="card-footer bg-white px-0">
+                    <table class="table table-borderless mb-0">
+                        <tr>
+                            <td class="fw-semibold text-end">Subtotal:</td>
+                            <td class="fw-semibold" id="subt" style="width: 160px;">0.00</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-semibold text-end">Tax:</td>
+                            <td class="fw-semibold" id="tax" style="width: 160px;">0.00</td>
+                        </tr>
+                        <tr>
+                            <td class="fw-semibold text-end">Total:</td>
+                            <td class="fw-semibold" id="total" style="width: 160px;">0.00</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <script>
+
+        let i = 0
+
+        function addItem({ description, quantity, unitPrice }) {
+            let html = `
+            <tr class="align-middle" data-index="${i}" data-subt="${quantity * unitPrice}"
+                data-description="${description}"
+                data-quantity="${quantity}"
+                data-unit-price="${unitPrice}">
+                <td style="width: 80px;">${i + 1}</td>
+                <td>${description}</td>
+                <td class="text-end" style="width: 80px;">${quantity}</td>
+                <td class="text-end" style="width: 80px;">${unitPrice}</td>
+                <td class="text-end" style="width: 80px;">${quantity * unitPrice}</td>
+                <td class="text-center" style="width: 80px;">
+                    <button type="button" class="btn btn-link text-danger py-0" onclick="removeItem(${i})">Remove</button>
+                </td>
+            </tr>`
+
+            document.getElementById('tbody-items').innerHTML += html
+            i++
+
+            updateTotals()
+        }
+
+        function removeItem(index) {
+            let row = document.querySelector(`#tbody-items [data-index="${index}"]`)
+            row.remove()
+
+            updateTotals()
+        }
+
+        function updateTotals() {
+            let rows = document.querySelectorAll('#tbody-items tr')
+            let subt = 0
+            let tax = 0
+            let total = 0
+
+            rows.forEach(row => {
+                subt += parseFloat(row.getAttribute('data-subt'))
+            })
+
+            tax = subt * 0
+            total = subt + tax
+
+            document.getElementById('subt').textContent = subt.toFixed(2)
+            document.getElementById('tax').textContent = tax.toFixed(2)
+            document.getElementById('total').textContent = total.toFixed(2)
+        }
+
+        document.getElementById('btnAddItem').addEventListener('click', e => {
+            let description = document.getElementById('description')
+            let quantity = document.getElementById('quantity')
+            let unitPrice = document.getElementById('unit-price')
+
+            let item = {
+                description: description.value,
+                quantity: quantity.value,
+                unitPrice: unitPrice.value,
+            }
+
+            addItem(item)
+
+            description.value = ''
+            quantity.value = 0
+            unitPrice.value = 0
+        })
+
+        document.getElementById('btnSave').addEventListener('click', e => {
+            let rows = document.querySelectorAll('#tbody-items tr')
+            let html = ''
+            let j = 0
+
+            rows.forEach(row => {
+                html += `
+                <div>
+                    <input type="hidden" name="OrderViewModel.OrderItems[${j}].Description" value="${row.getAttribute('data-description')}" />
+                    <input type="hidden" name="OrderViewModel.OrderItems[${j}].Quantity" value="${row.getAttribute('data-quantity')}" />
+                    <input type="hidden" name="OrderViewModel.OrderItems[${j}].UnitPrice" value="${row.getAttribute('data-unit-price')}" />
+                </div>`
+                
+                j++
+            })
+
+            document.getElementById('inputs-here').innerHTML = html
+        })
+
+    </script>
+}
